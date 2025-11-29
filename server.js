@@ -13,7 +13,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // --- Configuração do Banco de Dados (Supabase/PostgreSQL) ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // ADICIONE ESTA CONFIGURAÇÃO:
+    // ESSA CONFIGURAÇÃO É ESSENCIAL PARA O DEPLOY NO RENDER/SERVIDORES EXTERNOS
     ssl: { 
         rejectUnauthorized: false 
     }
@@ -42,8 +42,15 @@ function authenticateToken(req, res, next) {
 }
 
 // --- ROTAS DE TESTE E RAÍZ ---
-app.get('/', (req, res) => {
-    res.send('API da Escola de Idiomas está rodando e conectada ao banco de dados.');
+app.get('/', async (req, res) => {
+    try {
+        // Testa a conexão do pool antes de responder
+        await pool.query('SELECT 1'); 
+        res.send('API da Escola de Idiomas está rodando e conectada ao banco de dados.');
+    } catch (err) {
+        console.error('Erro ao verificar conexão com o banco de dados:', err);
+        res.status(500).send('API da Escola de Idiomas está rodando, mas FALHA ao conectar com o banco de dados.');
+    }
 });
 
 
@@ -161,6 +168,7 @@ app.delete('/api/turmas/:id', authenticateToken, async (req, res) => {
         }
         
         // 2. Exclui a turma
+        // A exclusão em turmas também excluirá as matrículas relacionadas (CASCADE ON DELETE)
         const deleteResult = await pool.query('DELETE FROM turmas WHERE id = $1', [turmaId]);
         
         if (deleteResult.rowCount === 1) {
@@ -231,15 +239,15 @@ app.get('/api/turmas/:turmaId/alunos', authenticateToken, async (req, res) => {
 // ----------------------------------------------------------------
 
 pool.connect()
-    .then(() => {
+    .then(client => {
         console.log('Conectado ao Supabase (PostgreSQL) com sucesso!');
+        client.release(); // Libera o cliente da conexão de teste
         app.listen(PORT, () => {
             console.log(`Servidor rodando na porta http://localhost:${PORT}`); 
         });
     })
     .catch(err => {
-        console.error('Erro ao conectar ao banco de dados:', err.stack);
+        // Usa process.env.DATABASE_URL para depuração, se necessário (apenas localmente)
+        console.error('Erro ao conectar ao banco de dados. Verifique DATABASE_URL e SSL/Firewall do Supabase.', err.stack);
         process.exit(1);
     });
-
-// FIM DO server.js
