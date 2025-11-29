@@ -13,8 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // --- Configuração do Banco de Dados (Supabase/PostgreSQL) ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // Em ambientes de deploy como o Render, pode ser necessário configurar SSL:
-    // ssl: { rejectUnauthorized: false }
+    // ADICIONE ESTA CONFIGURAÇÃO:
+    ssl: { 
+        rejectUnauthorized: false 
+    }
 });
 
 // --- Middlewares Essenciais ---
