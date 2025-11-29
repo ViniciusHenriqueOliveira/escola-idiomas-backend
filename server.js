@@ -1,4 +1,3 @@
-// server.js
 require('dotenv').config(); // Carrega as variáveis de ambiente do .env
 const express = require('express');
 const cors = require('cors');
@@ -13,7 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // --- Configuração do Banco de Dados (Supabase/PostgreSQL) ---
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    // ESSA CONFIGURAÇÃO É ESSENCIAL PARA O DEPLOY NO RENDER/SERVIDORES EXTERNOS
     ssl: { 
         rejectUnauthorized: false 
     }
@@ -52,11 +50,6 @@ app.get('/', async (req, res) => {
         res.status(500).send('API da Escola de Idiomas está rodando, mas FALHA ao conectar com o banco de dados.');
     }
 });
-
-
-// ----------------------------------------------------------------
-// --- ROTAS DE AUTENTICAÇÃO (RF01, RF02) ---
-// ----------------------------------------------------------------
 
 // RF01 - Cadastro de Usuários
 app.post('/api/usuarios/cadastro', async (req, res) => {
@@ -106,11 +99,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: 'Erro interno do servidor ao logar.' });
     }
 });
-
-
-// ----------------------------------------------------------------
-// --- ROTAS DE TURMAS E MATRÍCULAS (RF03, RF04) ---
-// ----------------------------------------------------------------
 
 // RF03 - CRIAÇÃO de Turma
 app.post('/api/turmas', authenticateToken, async (req, res) => {
@@ -234,10 +222,7 @@ app.get('/api/turmas/:turmaId/alunos', authenticateToken, async (req, res) => {
     }
 });
 
-// ----------------------------------------------------------------
-// --- CONEXÃO COM O BANCO E INICIALIZAÇÃO DO SERVIDOR ---
-// ----------------------------------------------------------------
-
+// --- INICIALIZAÇÃO DO SERVIDOR ---
 pool.connect()
     .then(client => {
         console.log('Conectado ao Supabase (PostgreSQL) com sucesso!');
